@@ -35,6 +35,10 @@ export async function handle(request, env = process.env, send = fetch) {
     return reply(200, 'ignored');
   }
 
+  if (event === 'workflow_run' && (payload.action !== 'completed' || payload.workflow_run?.conclusion !== 'failure')) {
+    return reply(200, 'ignored');
+  }
+
   const url = env.FEISHU_WEBHOOK_URL;
   if (!botUrlPattern.test(url ?? '')) {
     return reply(500, 'Invalid FEISHU_WEBHOOK_URL');

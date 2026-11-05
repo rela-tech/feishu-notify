@@ -86,3 +86,19 @@ test('默认订阅提交评审，根据评审结果生成标题并链接到这�
     assert.equal(card.elements[1].actions[0].url, url);
   }
 });
+
+test('即使订阅全部事件，CI 也仅转发已完成且失败的运行', async () => {
+  for (const [action, conclusion, expected] of [
+    ['completed', 'success', 'ignored'], ['completed', 'cancelled', 'ignored'],
+    ['in_progress', null, 'ignored'], ['completed', 'failure', 'sent']
+  ]) {
+    let sends = 0;
+    const payload = { action, workflow_run: { conclusion, name: 'PR verification', head_branch: 'main' } };
+    const response = await handle(delivery('workflow_run', payload), { ...env, GITHUB_EVENTS: '*' }, async () => {
+      sends++;
+      return Response.json({ code: 0 });
+    });
+    assert.equal((await response.json()).message, expected);
+    assert.equal(sends, expected === 'sent' ? 1 : 0);
+  }
+});

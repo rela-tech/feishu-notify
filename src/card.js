@@ -2,7 +2,7 @@ const plain = content => ({ tag: 'plain_text', content });
 
 const actionLabels = new Map(Object.entries({
   opened: '新建', closed: '关闭', reopened: '重新打开', edited: '编辑',
-  synchronize: '更新', published: '发布', created: '创建', deleted: '删除'
+  review_requested: '请求评审', ready_for_review: '准备评审', synchronize: '更新', published: '发布', created: '创建', deleted: '删除'
 }));
 
 const reviewLabels = new Map([
@@ -17,6 +17,11 @@ function describe(event, p) {
   const number = item?.number ?? p.number;
   const suffix = number ? ` #${number}` : '';
 
+  if (event === 'workflow_run') {
+    const run = p.workflow_run;
+    return { title: 'CI 失败', details: [['工作流', run.name], ['分支', run.head_branch]],
+      url: run.html_url, target: '运行记录' };
+  }
   if (event === 'push') {
     const ref = p.ref?.replace(/^refs\/(heads|tags)\//, '');
     const verb = p.deleted ? '删除' : '推送到';
@@ -44,6 +49,7 @@ function describe(event, p) {
     const kind = event === 'issues' ? 'Issue' : 'PR';
     const verb = p.action === 'closed' && p.pull_request?.merged ? '合并' : action;
     const details = [['标题', subject]];
+    if (p.action === 'review_requested') details.push(['请求评审', p.requested_reviewer?.login ?? p.requested_team?.slug]);
     if (event === 'pull_request' && p.action === 'opened') details.push(['正文', p.pull_request?.body?.trim()]);
     return { title: `${verb} ${kind}${suffix}`.trim(), details, url, target: kind };
   }
