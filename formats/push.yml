@@ -3,9 +3,15 @@ body: |
   {{#actor}}
   操作人：{{actor}}
   {{/actor}}
-  {{#commit}}
-  提交：{{commit}}
-  {{/commit}}
+  {{#commitCount}}
+  本次推送共 {{commitCount}} 个提交：
+  {{/commitCount}}
+  {{#commits}}
+  • {{commit}}
+  {{/commits}}
+  {{#omittedCount}}
+  另有 {{omittedCount}} 个提交，可在 GitHub 查看。
+  {{/omittedCount}}
 button: 在 GitHub 查看提交
 link: pushUrl
 variants:

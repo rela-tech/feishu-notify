@@ -177,3 +177,24 @@ test('通知标题说明操作人、仓库和具体动作', () => {
   }
   assert.equal(githubCard('issues', { action: 'opened' }).card.header.title.content, '提交了 Issue');
 });
+
+test('推送卡片按顺序列出每次提交的短 SHA 和首行，保留比较链接', () => {
+  const commits = [
+    { id: '123456789', author: { username: 'alice', name: 'Alice Li' }, message: '修复登录\n\n详细说明' },
+    { id: 'abcdef012', author: { name: '小林' }, message: '更新测试' }
+  ];
+  const compare = 'https://github.com/example/repo/compare/base...head';
+  const { elements } = githubCard('push', { commits, head_commit: commits[1], compare }).card;
+  assert.equal(elements[0].text.content, '本次推送共 2 个提交：\n• [alice] 1234567 修复登录\n• [小林] abcdef0 更新测试');
+  assert.equal(elements[1].actions[0].url, compare);
+  assert.equal(githubCard('push', { head_commit: commits[0] }).card.elements[0].text.content,
+    '本次推送共 1 个提交：\n• [alice] 1234567 修复登录');
+  assert.deepEqual(githubCard('push', { commits: [], head_commit: commits[0] }).card.elements, []);
+});
+
+test('大型推送列出前 50 条并标明剩余数量', () => {
+  const commits = Array.from({ length: 52 }, (_, i) => ({ message: '提交 ' + i }));
+  const body = githubCard('push', { commits }).card.elements[0].text.content;
+  assert.match(body, /^本次推送共 52 个提交：/);
+  assert.match(body, /• 提交 49\n另有 2 个提交，可在 GitHub 查看。$/);
+});

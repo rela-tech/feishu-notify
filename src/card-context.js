@@ -1,3 +1,16 @@
+function pushCommitList(p) {
+  const commits = p.deleted ? [] : (p.commits ?? (p.head_commit ? [p.head_commit] : []));
+  const visible = commits.slice(0, 50).map(entry => {
+    const author = entry.author?.username?.trim() || entry.author?.name?.trim();
+    const sha = entry.id?.slice(0, 7);
+    const title = entry.message?.split(/[\r\n]/, 1)[0] ?? '';
+    const summary = Array.from(title);
+    const subject = summary.length > 100 ? summary.slice(0, 99).join('') + '…' : title;
+    return { commit: [author && `[${author}]`, sha, subject].filter(Boolean).join(' ') };
+  });
+  return { commits: visible, commitCount: commits.length, omittedCount: commits.length - visible.length };
+}
+
 export function cardContext(event, p) {
   const item = p.pull_request ?? p.issue ?? p.release ?? p.workflow_run ?? p.discussion;
   const repo = p.repository?.name ?? p.repository?.full_name?.split('/').pop();
@@ -8,6 +21,7 @@ export function cardContext(event, p) {
   const tag = p.release?.tag_name;
   const itemUrl = item?.html_url;
   return {
+    ...pushCommitList(event === 'push' ? p : {}),
     actor, subject, itemUrl, tag,
     repo, number, event,
     org: p.organization?.login,
