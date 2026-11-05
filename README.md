@@ -18,7 +18,7 @@ npm run deploy
 
 ## 配置订阅
 
-默认值为 `push,pull_request.opened,pull_request.closed,issues.opened,release.published,pull_request_review.submitted,issue_comment.created,pull_request_review_comment.created`。例如，只想收到 PR 打开和 Release 发布通知，可以这样更新订阅并重新部署：
+默认值为 `push,pull_request.opened,pull_request.closed,issues.opened,issues.closed,release.published,pull_request_review.submitted,issue_comment.created,pull_request_review_comment.created`。例如，只想收到 PR 打开和 Release 发布通知，可以这样更新订阅并重新部署：
 
 ```sh
 GITHUB_EVENTS=pull_request.opened,release.published npm run deploy
