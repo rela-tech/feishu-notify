@@ -2,34 +2,34 @@
 
 把选定的 GitHub 事件转成飞书群卡片。卡片显示事件、仓库、操作人，并在有详情链接时提供跳转按钮。Push 附带分支或标签及最新提交摘要，PR、Issue 和 Release 附带标题。项目使用 Node.js 24 和 Vercel Functions，无第三方运行依赖。
 
-## 自部署到 Vercel
+## 一键部署
 
-1. 在飞书群设置中添加「自定义机器人」，复制 webhook 地址。如果开启「签名校验」，同时复制机器人的签名密钥。如果启用了关键词校验，可将 `GitHub` 加入关键词。
-2. 将本项目推送到自己的 Git 仓库，在 Vercel 新建项目并导入该仓库。Framework Preset 选 **Other**，使用仓库根目录和默认构建设置。
-3. 在 Vercel 的 Production 环境配置以下变量，然后部署。之后修改变量需要重新部署才会生效。
+在 macOS / Linux 上安装 Node.js 24 和 GitHub CLI（`gh`），克隆项目，确认 `git remote get-url origin` 指向需要订阅的 GitHub 仓库，然后运行：
 
-| 环境变量 | 用途 |
-| --- | --- |
-| `GITHUB_WEBHOOK_SECRET` | 必填。自定的 GitHub webhook 密钥，可用 `openssl rand -hex 32` 生成。 |
-| `FEISHU_WEBHOOK_URL` | 必填。飞书或 Lark 自定义机器人的完整 webhook 地址。 |
-| `FEISHU_SIGNING_SECRET` | 机器人开启签名校验时必填，使用飞书提供的密钥。 |
-| `GITHUB_EVENTS` | 可选。逗号分隔的订阅规则，见下节。 |
+```sh
+npm run deploy
+```
 
-4. 打开 GitHub 仓库的 **Settings → Webhooks → Add webhook**。Payload URL 填 `https://你的生产域名/api/github`，Content type 选 `application/json`，Secret 填与 `GITHUB_WEBHOOK_SECRET` 相同的值。在 **Let me select individual events** 中勾选需要转发的事件并启用 webhook。该地址须允许 GitHub 直接访问。
-5. 在 **Recent Deliveries** 确认初始 `ping` 返回 `200 pong`，然后触发一个已订阅的事件，确认返回 `200 sent` 且群内收到卡片。Ping 仅验证 GitHub 到函数的连接。
+首次运行会引导你登录 GitHub 和 Vercel，并在终端提示粘贴目标飞书群的**自定义机器人 webhook 地址**。机器人开启签名校验时，再输入飞书提供的签名密钥。输入时不会回显。GitHub 账号需有管理目标仓库 webhook 的权限，Vercel 账号需能创建项目和部署到生产环境。
+
+脚本会自动获取固定版本的 Vercel CLI，关联或创建项目，生成 GitHub 签名密钥并写入 Vercel Production，然后触发生产部署。它会向稳定生产域名发送签名 ping，收到 `pong` 后，在 GitHub 创建或更新指向该地址的 webhook。整个过程无需在两边控制台复制密钥或勾选事件。
+
+再次运行会使用已关联的 Vercel 项目、已有的 GitHub 密钥、机器人和订阅规则。部署中断后可直接重跑。脚本按生产端点地址识别 webhook，只管理对应条目。
 
 ## 配置订阅
 
-默认值为 `push,pull_request.opened,pull_request.closed,issues.opened,release.published`。例如，只想收到 PR 打开和 Release 发布通知，可设置：
+默认值为 `push,pull_request.opened,pull_request.closed,issues.opened,release.published`。例如，只想收到 PR 打开和 Release 发布通知，可以这样更新订阅并重新部署：
 
-```dotenv
-GITHUB_EVENTS=pull_request.opened,release.published
+```sh
+GITHUB_EVENTS=pull_request.opened,release.published npm run deploy
 ```
 
 - `issues` 匹配该事件的所有动作，`issues.closed` 仅匹配关闭动作。
 - `*` 匹配 GitHub 已投递的全部业务事件。没有专用展示的事件也会生成通用卡片。
-- 两层筛选同时生效。例如订阅 `release.published` 时，GitHub webhook 也需要勾选 Releases。
+- 脚本将 `release.published` 等规则转换为 GitHub 的事件类型，并将完整规则写入 Vercel 供函数过滤动作。
 - 已合并 PR 使用 GitHub 的 `pull_request.closed` 规则，卡片会标为 `merged`。空的规则列表会暂停业务通知。
+
+自动化环境可通过进程环境变量或本机 `.env.local` 提供 `FEISHU_WEBHOOK_URL`、可选的 `FEISHU_SIGNING_SECRET` 和 `GITHUB_EVENTS`。GitHub 密钥由脚本生成，以 Vercel 可读的 Production Config 保存，供下次部署同步。飞书机器人地址和签名密钥以 Secret 保存。
 
 ## 本地验证与排错
 

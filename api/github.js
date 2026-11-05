@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { githubCard } from '../src/card.js';
+import { botUrlPattern, subscriptionRules } from '../src/config.js';
 
-const defaults = 'push,pull_request.opened,pull_request.closed,issues.opened,release.published';
 const reply = (status, message, headers) => Response.json({ message }, { status, headers });
 
 export async function handle(request, env = process.env, send = fetch) {
@@ -25,8 +25,10 @@ export async function handle(request, env = process.env, send = fetch) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return reply(400, 'Invalid payload');
   if (event === 'ping') return reply(200, 'pong');
 
-  const rules = (env.GITHUB_EVENTS ?? defaults).split(',').map(s => s.trim()).filter(Boolean);
-  if (!rules.every(rule => /^(?:\*|[a-z0-9_]+(?:\.[a-z0-9_]+)?)$/.test(rule))) {
+  let rules;
+  try {
+    rules = subscriptionRules(env.GITHUB_EVENTS);
+  } catch {
     return reply(500, 'Invalid GITHUB_EVENTS');
   }
   if (!rules.includes('*') && !rules.includes(event) && !rules.includes(`${event}.${payload.action}`)) {
@@ -34,7 +36,7 @@ export async function handle(request, env = process.env, send = fetch) {
   }
 
   const url = env.FEISHU_WEBHOOK_URL;
-  if (!/^https:\/\/open\.(?:feishu\.cn|larksuite\.com)\/open-apis\/bot\/v2\/hook\/[\w-]+$/.test(url ?? '')) {
+  if (!botUrlPattern.test(url ?? '')) {
     return reply(500, 'Invalid FEISHU_WEBHOOK_URL');
   }
   const card = githubCard(event, payload);
