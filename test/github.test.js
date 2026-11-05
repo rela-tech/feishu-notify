@@ -72,6 +72,23 @@ test('push 和通配订阅仅转发 main 分支的推送', async () => {
   }
 });
 
+test('跳过 PR 对话页普通评论，保留 Issue 评论和 PR 行内评论', async () => {
+  for (const [event, payload, expected] of [
+    ['issue_comment', { issue: { number: 1, pull_request: {} } }, 'ignored'],
+    ['issue_comment', { issue: { number: 2 } }, 'sent'],
+    ['pull_request_review_comment', { pull_request: { number: 1 } }, 'sent']
+  ]) {
+    let sends = 0;
+    const response = await handle(delivery(event, { ...payload, action: 'created' }), { ...env, GITHUB_EVENTS: '*' }, async () => {
+      sends++;
+      return Response.json({ code: 0 });
+    });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).message, expected);
+    assert.equal(sends, expected === 'sent' ? 1 : 0);
+  }
+});
+
 test('通配订阅支持其他事件，机器人业务错误返回 502', async () => {
   const response = await handle(delivery('fork', {}), { ...env, GITHUB_EVENTS: '*' },
     async () => Response.json({ code: 19024 }));

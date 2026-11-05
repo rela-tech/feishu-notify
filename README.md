@@ -26,6 +26,7 @@ GITHUB_EVENTS=pull_request.opened,release.published npm run deploy
 
 - `issues` 匹配该事件的所有动作，`issues.closed` 仅匹配关闭动作。
 - `*` 匹配 GitHub 已投递的全部业务事件。没有专用展示的事件也会生成通用卡片。
+- `issue_comment` 仅转发 Issue 评论。PR 对话页的普通评论会被跳过，通配订阅 `*` 也遵循此规则。
 - `pull_request_review.submitted` 在提交评审时发送卡片，标题显示批准、要求修改或评论，正文附评审意见。
 - `push` 仅转发 `main` 分支的推送，其他分支和标签均跳过。通配订阅 `*` 同样遵循此规则。
 - `workflow_run.completed` 仅在 GitHub Actions 运行结果为 `failure` 时通知，卡片附工作流名称、分支和运行链接。此过滤也适用于通配订阅。
@@ -38,6 +39,6 @@ GITHUB_EVENTS=pull_request.opened,release.published npm run deploy
 
 Node.js 24 下运行 `npm test` 即可验证验签、订阅过滤、卡片生成和飞书错误处理。测试使用模拟机器人。需要通过 HTTP 调试时，复制 `.env.example` 为 `.env.local` 并填入配置，然后在项目根目录运行 `npx vercel dev`。
 
-在 GitHub Recent Deliveries 中，`ignored` 表示订阅未命中，`401` 表示 GitHub 密钥或签名不匹配，`502` 表示飞书请求失败或机器人拒收。处理失败后可手动 Redeliver。超时后先检查群里是否已收到卡片，此服务没有持久化去重，重复投递可能产生重复通知。
+在 GitHub Recent Deliveries 中，`ignored` 表示事件未命中订阅或被过滤规则跳过，`401` 表示 GitHub 密钥或签名不匹配，`502` 表示飞书请求失败或机器人拒收。处理失败后可手动 Redeliver。超时后先检查群里是否已收到卡片，此服务没有持久化去重，重复投递可能产生重复通知。
 
 参考文档：[GitHub webhook 验签](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries) · [飞书自定义机器人](https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot) · [Vercel Node.js Functions](https://vercel.com/docs/functions/runtimes/node-js)
