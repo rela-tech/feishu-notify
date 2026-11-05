@@ -43,7 +43,7 @@ export async function handle(request, env = process.env, send = fetch) {
     return reply(200, 'ignored');
   }
 
-  if (event === 'workflow_run' && (payload.action !== 'completed' || payload.workflow_run?.conclusion !== 'failure')) {
+  if (event === 'workflow_run') {
     return reply(200, 'ignored');
   }
 

@@ -18,7 +18,7 @@ npm run deploy
 
 ## 配置订阅
 
-默认值为 `push,pull_request.opened,pull_request.closed,issues.opened,issues.closed,release.published,pull_request_review.submitted,issue_comment.created,pull_request_review_comment.created,pull_request.review_requested,pull_request.ready_for_review,pull_request.reopened,issues.reopened,workflow_run.completed`。例如，只想收到 PR 打开和 Release 发布通知，可以这样更新订阅并重新部署：
+默认值为 `push,pull_request.opened,pull_request.closed,issues.opened,issues.closed,release.published,pull_request_review.submitted,issue_comment.created,pull_request_review_comment.created,pull_request.review_requested,pull_request.ready_for_review,pull_request.reopened,issues.reopened`。例如，只想收到 PR 打开和 Release 发布通知，可以这样更新订阅并重新部署：
 
 ```sh
 GITHUB_EVENTS=pull_request.opened,release.published npm run deploy
@@ -29,7 +29,7 @@ GITHUB_EVENTS=pull_request.opened,release.published npm run deploy
 - `issue_comment` 仅转发 Issue 评论。PR 对话页的普通评论会被跳过，通配订阅 `*` 也遵循此规则。
 - `pull_request_review.submitted` 在提交评审时发送卡片，标题显示批准、要求修改或评论，正文附评审意见。
 - `push` 仅转发 `main` 分支的推送，其他分支和标签均跳过。通配订阅 `*` 同样遵循此规则。
-- `workflow_run.completed` 仅在 GitHub Actions 运行结果为 `failure` 时通知，卡片附工作流名称、分支和运行链接。此过滤也适用于通配订阅。
+- `workflow_run.completed` 的 CI 失败通知已暂停，已有订阅和通配订阅 `*` 均会跳过此事件。
 - 脚本将 `release.published` 等规则转换为 GitHub 的事件类型，并将完整规则写入 Vercel 供函数过滤动作。
 - 已合并 PR 使用 GitHub 的 `pull_request.closed` 规则，卡片会标为 `merged`。空的规则列表会暂停业务通知。
 

@@ -124,18 +124,12 @@ test('默认订阅提交评审，根据评审结果生成标题并链接到这�
   }
 });
 
-test('即使订阅全部事件，CI 也仅转发已完成且失败的运行', async () => {
-  for (const [action, conclusion, expected] of [
-    ['completed', 'success', 'ignored'], ['completed', 'cancelled', 'ignored'],
-    ['in_progress', null, 'ignored'], ['completed', 'failure', 'sent']
-  ]) {
-    let sends = 0;
-    const payload = { action, workflow_run: { conclusion, name: 'PR verification', head_branch: 'main' } };
-    const response = await handle(delivery('workflow_run', payload), { ...env, GITHUB_EVENTS: '*' }, async () => {
-      sends++;
-      return Response.json({ code: 0 });
-    });
-    assert.equal((await response.json()).message, expected);
-    assert.equal(sends, expected === 'sent' ? 1 : 0);
+test('CI 失败通知暂停，已有订阅和通配订阅均跳过', async () => {
+  const payload = { action: 'completed', workflow_run: { conclusion: 'failure' } };
+  for (const subscription of ['workflow_run.completed', '*']) {
+    const send = () => { throw Error('Unexpected send'); };
+    const response = await handle(delivery('workflow_run', payload), { ...env, GITHUB_EVENTS: subscription }, send);
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).message, 'ignored');
   }
 });
