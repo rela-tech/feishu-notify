@@ -18,11 +18,23 @@ npm run deploy
 
 ## 编辑通知格式
 
-`formats/` 按 GitHub 事件名存放 YAML。修改 PR 通知编辑 `formats/pull_request.yml`，修改额外订阅事件的通用样式编辑 `formats/default.yml`。每份配置定义标题（`title`）、按顺序排列的正文字段（`fields`）、按钮目标名称（`button`）和链接字段（`link`）。标题栏颜色 `color` 默认是 `default`。
+`formats/` 按 GitHub 事件名存放 YAML。修改 PR 通知编辑 `formats/pull_request.yml`，修改额外订阅事件的通用样式编辑 `formats/default.yml`。每份配置定义标题（`title`）、多行正文模板（`body`）、完整按钮文案（`button`）和链接字段（`link`）。标题栏颜色 `color` 默认是 `default`。
 
-`variants` 下按动作覆盖需要变化的字段，例如 PR 的 `opened` 和 `closed`。同一动作有多种结果时用更具体的键，例如 `closed.merged` 和 `submitted.approved`。每个变体继承所在文件的基础配置。标题中的 `{{prefix}}` 表示操作人与仓库，`{{number}}` 包含编号前缀，缺少编号时自动省略。可用变量由 `src/card-context.js` 定义。
+`variants` 下按动作覆盖需要变化的字段，例如 PR 的 `opened` 和 `closed`。同一动作有多种结果时用更具体的键，例如 `closed.merged` 和 `submitted.approved`。每个变体继承所在文件的基础配置。标题、正文和按钮文案都支持 Mustache 模板。`{{actor}}` 插入原始值，`{{#body}}…{{/body}}` 仅在 GitHub 提供正文时显示其中的内容，`{{>prefix}}` 引用共享片段。多行正文可以自由安排换行、空行和说明文字，例如：
 
-首次运行 `npm ci`，修改 YAML 后运行 `npm test`。安装和测试都会执行 `npm run build:formats`，校验标题变量、颜色、正文字段和默认订阅覆盖情况，并生成供函数直接导入的 JSON。订阅和过滤仍由下方规则控制。
+```yaml
+body: |
+  {{#subject}}
+  本次提交「{{subject}}」
+  {{/subject}}
+  {{#reviewer}}
+  请 {{reviewer}} 评审。
+  {{/reviewer}}
+```
+
+可用变量由 `src/card-context.js` 提取。仓库和编号的写法、仓库兜底按钮、正文变量长度限制等共享设置在 `formats/_shared.yml`。
+
+首次运行 `npm ci`，修改 YAML 后运行 `npm test`。安装和测试都会执行 `npm run build:formats`，校验模板语法、变量、片段、颜色和默认订阅覆盖情况，并生成供函数直接导入的 JSON。订阅和过滤仍由下方规则控制。
 
 ## 配置订阅
 

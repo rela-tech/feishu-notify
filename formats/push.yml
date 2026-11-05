@@ -1,7 +1,13 @@
-title: "{{prefix}}推送了代码{{branchDestination}}"
-fields: [[操作人, actor], [提交, commit]]
-button: 提交
+title: "{{>prefix}}推送了代码{{>branchDestination}}"
+body: |
+  {{#actor}}
+  操作人：{{actor}}
+  {{/actor}}
+  {{#commit}}
+  提交：{{commit}}
+  {{/commit}}
+button: 在 GitHub 查看提交
 link: pushUrl
 variants:
   deleted:
-    title: "{{prefix}}删除了{{branch}}"
+    title: "{{>prefix}}删除了{{>branch}}"

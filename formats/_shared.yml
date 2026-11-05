@@ -1,0 +1,12 @@
+color: default
+buttonType: default
+repositoryButton: 在 GitHub 查看仓库
+bodyValueLimit: 320
+partials:
+  prefix: "{{#actor}}{{actor}} {{/actor}}{{#repo}}在 {{repo}} 仓库{{/repo}}{{^repo}}{{#org}}在 {{org}} 组织{{/org}}{{/repo}}"
+  number: "{{#number}} #{{number}}{{/number}}"
+  branch: "{{#branch}} {{branch}} {{/branch}}分支"
+  branchDestination: "{{#branch}}到 {{branch}} 分支{{/branch}}"
+  eventAction: "{{event}}{{#rawAction}} · {{rawAction}}{{/rawAction}}"
+  releaseAction: "{{#tag}}{{tag}}{{#rawAction}} · {{/rawAction}}{{/tag}}{{rawAction}}{{^tag}}{{^rawAction}}{{event}}{{/rawAction}}{{/tag}}"
+  commentKind: "{{#isPrComment}}PR{{/isPrComment}}{{^isPrComment}}Issue{{/isPrComment}}"

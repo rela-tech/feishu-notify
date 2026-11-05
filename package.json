@@ -14,6 +14,7 @@
     "build:formats": "node scripts/build-formats.js"
   },
   "dependencies": {
+    "mustache": "^4.2.0",
     "yaml": "^2.9.1"
   }
 }

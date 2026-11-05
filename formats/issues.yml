@@ -1,18 +1,33 @@
-title: "{{prefix}}触发了 Issue{{number}} 事件（{{action}}）"
-fields: [[操作人, actor], [标题, subject]]
-button: Issue
+title: "{{>prefix}}触发了 Issue{{>number}} 事件（{{action}}）"
+body: |
+  {{#actor}}
+  操作人：{{actor}}
+  {{/actor}}
+  {{#subject}}
+  标题：{{subject}}
+  {{/subject}}
+button: 在 GitHub 查看Issue
 link: itemUrl
 variants:
   opened:
-    title: "{{prefix}}提交了 Issue{{number}}"
+    title: "{{>prefix}}提交了 Issue{{>number}}"
     color: wathet
-    fields: [[操作人, actor], [标题, subject], [正文, body]]
+    body: |
+      {{#actor}}
+      操作人：{{actor}}
+      {{/actor}}
+      {{#subject}}
+      标题：{{subject}}
+      {{/subject}}
+      {{#body}}
+      正文：{{body}}
+      {{/body}}
   closed:
-    title: "{{prefix}}关闭了 Issue{{number}}"
+    title: "{{>prefix}}关闭了 Issue{{>number}}"
   closed.completed:
-    title: "{{prefix}}关闭了 Issue{{number}}"
+    title: "{{>prefix}}关闭了 Issue{{>number}}"
     color: green
   reopened:
-    title: "{{prefix}}重新打开了 Issue{{number}}"
+    title: "{{>prefix}}重新打开了 Issue{{>number}}"
   edited:
-    title: "{{prefix}}编辑了 Issue{{number}}"
+    title: "{{>prefix}}编辑了 Issue{{>number}}"

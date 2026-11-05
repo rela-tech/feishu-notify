@@ -1,11 +1,17 @@
-title: "{{prefix}}触发了 {{commentKind}}{{number}} 的评论事件（{{action}}）"
-fields: [[操作人, actor], [评论, comment]]
-button: 评论
+title: "{{>prefix}}触发了 {{>commentKind}}{{>number}} 的评论事件（{{action}}）"
+body: |
+  {{#actor}}
+  操作人：{{actor}}
+  {{/actor}}
+  {{#comment}}
+  评论：{{comment}}
+  {{/comment}}
+button: 在 GitHub 查看评论
 link: commentUrl
 variants:
   created:
-    title: "{{prefix}}对 {{commentKind}}{{number}} 发表了评论"
+    title: "{{>prefix}}对 {{>commentKind}}{{>number}} 发表了评论"
   edited:
-    title: "{{prefix}}编辑了 {{commentKind}}{{number}} 的评论"
+    title: "{{>prefix}}编辑了 {{>commentKind}}{{>number}} 的评论"
   deleted:
-    title: "{{prefix}}删除了 {{commentKind}}{{number}} 的评论"
+    title: "{{>prefix}}删除了 {{>commentKind}}{{>number}} 的评论"

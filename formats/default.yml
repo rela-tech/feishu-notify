@@ -1,4 +1,16 @@
-title: "{{prefix}}触发了 {{eventAction}} 事件"
-fields: [[操作人, actor], [标题, subject], [引用, ref], [结果, conclusion]]
-button: 详情
+title: "{{>prefix}}触发了 {{>eventAction}} 事件"
+body: |
+  {{#actor}}
+  操作人：{{actor}}
+  {{/actor}}
+  {{#subject}}
+  标题：{{subject}}
+  {{/subject}}
+  {{#ref}}
+  引用：{{ref}}
+  {{/ref}}
+  {{#conclusion}}
+  结果：{{conclusion}}
+  {{/conclusion}}
+button: 在 GitHub 查看详情
 link: detailUrl

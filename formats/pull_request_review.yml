@@ -1,15 +1,24 @@
-title: "{{prefix}}评审了 PR{{number}}"
-fields: [[操作人, actor], [标题, subject], [评审意见, reviewBody]]
-button: 评审
+title: "{{>prefix}}评审了 PR{{>number}}"
+body: |
+  {{#actor}}
+  操作人：{{actor}}
+  {{/actor}}
+  {{#subject}}
+  标题：{{subject}}
+  {{/subject}}
+  {{#reviewBody}}
+  评审意见：{{reviewBody}}
+  {{/reviewBody}}
+button: 在 GitHub 查看评审
 link: reviewUrl
 variants:
   submitted:
-    title: "{{prefix}}评审了 PR{{number}}"
+    title: "{{>prefix}}评审了 PR{{>number}}"
   submitted.approved:
-    title: "{{prefix}}批准了 PR{{number}}"
+    title: "{{>prefix}}批准了 PR{{>number}}"
     color: green
   submitted.changes_requested:
-    title: "{{prefix}}要求修改 PR{{number}}"
+    title: "{{>prefix}}要求修改 PR{{>number}}"
     color: red
   submitted.commented:
-    title: "{{prefix}}评论了 PR{{number}}"
+    title: "{{>prefix}}评论了 PR{{>number}}"
