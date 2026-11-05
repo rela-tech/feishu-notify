@@ -98,7 +98,7 @@ export function githubCard(event, p) {
   const link = url ?? p.repository?.html_url;
   if (typeof link === 'string' && link.startsWith('https://')) {
     elements.push({ tag: 'action', actions: [
-      { tag: 'button', text: plain(`在 GitHub 查看${url ? target : '仓库'}`), url: link, type: 'primary' }
+      { tag: 'button', text: plain(`在 GitHub 查看${url ? target : '仓库'}`), url: link, type: 'default' }
     ] });
   }
   return {

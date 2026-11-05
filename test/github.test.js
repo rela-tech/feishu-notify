@@ -38,6 +38,7 @@ test('订阅的 PR 生成签名卡片，保留中文和详情链接', async () =
   assert.equal(card.card.header.title.content, 'repo · 新建 PR #1');
   assert.equal(card.card.elements[0].text.content, '操作人：tester\n标题：修复登录\n正文：验证登录流程。');
   assert.equal(card.card.elements[1].actions[0].url, url);
+  assert.equal(card.card.elements[1].actions[0].type, 'default');
   assert.equal(card.sign, createHmac('sha256', card.timestamp + '\n' + env.FEISHU_SIGNING_SECRET).digest('base64'));
 });
 
