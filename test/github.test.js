@@ -25,7 +25,7 @@ test('订阅的 PR 生成签名卡片，保留中文和详情链接', async () =
   const result = await handle(delivery('pull_request', {
     action: 'opened', repository: { full_name: 'example/repo' },
     sender: { login: 'tester' },
-    pull_request: { number: 1, title: '修复登录', html_url: url }
+    pull_request: { number: 1, title: '修复登录', body: '验证登录流程。', html_url: url }
   }), env, async (target, options) => {
     assert.equal(target, env.FEISHU_WEBHOOK_URL);
     card = JSON.parse(options.body);
@@ -34,7 +34,7 @@ test('订阅的 PR 生成签名卡片，保留中文和详情链接', async () =
   assert.equal(result.status, 200);
   assert.equal(card.msg_type, 'interactive');
   assert.equal(card.card.header.title.content, 'repo · 新建 PR #1');
-  assert.equal(card.card.elements[0].text.content, '操作人：tester\n标题：修复登录');
+  assert.equal(card.card.elements[0].text.content, '操作人：tester\n标题：修复登录\n正文：验证登录流程。');
   assert.equal(card.card.elements[1].actions[0].url, url);
   assert.equal(card.sign, createHmac('sha256', card.timestamp + '\n' + env.FEISHU_SIGNING_SECRET).digest('base64'));
 });

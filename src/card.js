@@ -43,7 +43,9 @@ function describe(event, p) {
   if (event === 'issues' || event === 'pull_request') {
     const kind = event === 'issues' ? 'Issue' : 'PR';
     const verb = p.action === 'closed' && p.pull_request?.merged ? '合并' : action;
-    return { title: `${verb} ${kind}${suffix}`.trim(), details: [['标题', subject]], url, target: kind };
+    const details = [['标题', subject]];
+    if (event === 'pull_request' && p.action === 'opened') details.push(['正文', p.pull_request?.body?.trim()]);
+    return { title: `${verb} ${kind}${suffix}`.trim(), details, url, target: kind };
   }
   if (event === 'release') {
     const tag = p.release?.tag_name;
