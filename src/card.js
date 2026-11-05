@@ -50,13 +50,16 @@ function describe(event, p) {
     const verb = p.action === 'closed' && p.pull_request?.merged ? '合并' : action;
     const details = [['标题', subject]];
     if (p.action === 'review_requested') details.push(['请求评审', p.requested_reviewer?.login ?? p.requested_team?.slug]);
-    if (event === 'pull_request' && p.action === 'opened') details.push(['正文', p.pull_request?.body?.trim()]);
+    if (p.action === 'opened' || (event === 'pull_request' && ['review_requested', 'ready_for_review'].includes(p.action))) {
+      details.push(['正文', item?.body?.trim()]);
+    }
     return { title: `${verb} ${kind}${suffix}`.trim(), details, url, target: kind };
   }
   if (event === 'release') {
     const tag = p.release?.tag_name;
-    return { title: [action, 'Release', tag].filter(Boolean).join(' '),
-      details: [['名称', subject === tag ? undefined : subject]], url, target: 'Release' };
+    const details = [['名称', subject === tag ? undefined : subject]];
+    if (p.action === 'published') details.push(['发布说明', p.release?.body?.trim()]);
+    return { title: [action, 'Release', tag].filter(Boolean).join(' '), details, url, target: 'Release' };
   }
   return {
     title: [event, p.action].filter(Boolean).join(' · '),
