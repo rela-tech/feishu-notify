@@ -35,7 +35,7 @@ test('订阅的 PR 生成签名卡片，保留中文和详情链接', async () =
   assert.equal(result.status, 200);
   assert.equal(card.msg_type, 'interactive');
   assert.equal(card.card.header.template, 'wathet');
-  assert.equal(card.card.header.title.content, 'repo · 新建 PR #1');
+  assert.equal(card.card.header.title.content, 'tester 在 repo 仓库提交了 PR #1');
   assert.equal(card.card.elements[0].text.content, '操作人：tester\n标题：修复登录\n正文：验证登录流程。');
   assert.equal(card.card.elements[1].actions[0].url, url);
   assert.equal(card.card.elements[1].actions[0].type, 'default');
@@ -108,9 +108,9 @@ test('默认订阅提交评审，根据评审结果生成标题并链接到这�
   const defaults = { ...env };
   delete defaults.GITHUB_EVENTS;
   for (const [state, label, body, template] of [
-    ['approved', '批准', null, 'green'],
+    ['approved', '批准了', null, 'green'],
     ['changes_requested', '要求修改', '请补充错误处理', 'red'],
-    ['commented', '评论', '这段逻辑清晰', 'default']
+    ['commented', '评论了', '这段逻辑清晰', 'default']
   ]) {
     let card;
     const result = await handle(delivery('pull_request_review', {
@@ -122,7 +122,7 @@ test('默认订阅提交评审，根据评审结果生成标题并链接到这�
     });
     assert.equal(result.status, 200);
     assert.equal(card.header.template, template);
-    assert.equal(card.header.title.content, `repo · ${label} PR #2`);
+    assert.equal(card.header.title.content, `tester 在 repo 仓库${label} PR #2`);
     assert.equal(card.elements[0].text.content, '操作人：tester\n标题：登录' + (body ? '\n评审意见：' + body : ''));
     assert.equal(card.elements[1].actions[0].url, url);
   }
@@ -154,4 +154,26 @@ test('卡片颜色区分强提醒、成功与普通动态', () => {
   ]) {
     assert.equal(githubCard(event, payload).card.header.template, expected, event);
   }
+});
+
+test('通知标题说明操作人、仓库和具体动作', () => {
+  const base = { sender: { login: 'alice' }, repository: { name: 'demo' } };
+  for (const [event, payload, title] of [
+    ['push', { ref: 'refs/heads/main' }, '推送了代码到 main 分支'],
+    ['push', { ref: 'refs/heads/main', deleted: true }, '删除了 main 分支'],
+    ['issues', { action: 'opened', issue: { number: 4 } }, '提交了 Issue #4'],
+    ['issues', { action: 'reopened', number: 4 }, '重新打开了 Issue #4'],
+    ['pull_request', { action: 'closed', number: 3 }, '关闭了 PR #3'],
+    ['pull_request', { action: 'closed', pull_request: { number: 3, merged: true } }, '合并了 PR #3'],
+    ['pull_request', { action: 'review_requested', number: 3 }, '请求评审 PR #3'],
+    ['pull_request', { action: 'ready_for_review', number: 3 }, '将 PR #3 标记为可评审'],
+    ['issue_comment', { action: 'created', issue: { number: 4 } }, '对 Issue #4 发表了评论'],
+    ['pull_request_review_comment', { action: 'created', number: 3 }, '对 PR #3 发表了行内评论'],
+    ['release', { action: 'published', release: { tag_name: 'v1.2' } }, '发布了版本 v1.2'],
+    ['fork', {}, '触发了 fork 事件']
+  ]) {
+    assert.equal(githubCard(event, { ...base, ...payload }).card.header.title.content,
+      'alice 在 demo 仓库' + title);
+  }
+  assert.equal(githubCard('issues', { action: 'opened' }).card.header.title.content, '提交了 Issue');
 });

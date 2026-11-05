@@ -1,0 +1,15 @@
+title: "{{prefix}}触发了版本事件（{{releaseAction}}）"
+fields: [[操作人, actor], [名称, releaseName]]
+button: Release
+link: itemUrl
+variants:
+  published:
+    title: "{{prefix}}发布了版本 {{tag}}"
+    color: wathet
+    fields: [[操作人, actor], [名称, releaseName], [发布说明, body]]
+  created:
+    title: "{{prefix}}创建了版本 {{tag}}"
+  edited:
+    title: "{{prefix}}编辑了版本 {{tag}}"
+  deleted:
+    title: "{{prefix}}删除了版本 {{tag}}"

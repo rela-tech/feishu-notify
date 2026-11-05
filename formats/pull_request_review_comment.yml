@@ -1,0 +1,11 @@
+title: "{{prefix}}触发了 PR{{number}} 的行内评论事件（{{action}}）"
+fields: [[操作人, actor], [评论, comment]]
+button: 评论
+link: commentUrl
+variants:
+  created:
+    title: "{{prefix}}对 PR{{number}} 发表了行内评论"
+  edited:
+    title: "{{prefix}}编辑了 PR{{number}} 的行内评论"
+  deleted:
+    title: "{{prefix}}删除了 PR{{number}} 的行内评论"

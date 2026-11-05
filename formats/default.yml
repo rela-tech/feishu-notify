@@ -1,0 +1,4 @@
+title: "{{prefix}}触发了 {{eventAction}} 事件"
+fields: [[操作人, actor], [标题, subject], [引用, ref], [结果, conclusion]]
+button: 详情
+link: detailUrl

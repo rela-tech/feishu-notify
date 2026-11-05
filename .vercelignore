@@ -1,4 +1,4 @@
 .env
 .env.*
-scripts/
+scripts/deploy.js
 test/

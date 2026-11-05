@@ -1,6 +1,6 @@
 # feishu-notify
 
-把选定的 GitHub 事件转成飞书群卡片。卡片显示事件、仓库、操作人，并在有详情链接时提供跳转按钮。Push 附带分支及最新提交摘要，PR、Issue 和 Release 附带标题。项目使用 Node.js 24 和 Vercel Functions，无第三方运行依赖。
+把选定的 GitHub 事件转成飞书群卡片。卡片显示事件、仓库、操作人，并在有详情链接时提供跳转按钮。Push 附带分支及最新提交摘要，PR、Issue 和 Release 附带标题。项目使用 Node.js 24 和 Vercel Functions，YAML 在构建时解析。
 
 ## 一键部署
 
@@ -15,6 +15,14 @@ npm run deploy
 脚本会自动获取固定版本的 Vercel CLI，关联或创建项目，生成 GitHub 签名密钥并写入 Vercel Production，然后触发生产部署。它会向稳定生产域名发送签名 ping，收到 `pong` 后，在 GitHub 创建或更新指向该地址的 webhook。整个过程无需在两边控制台复制密钥或勾选事件。
 
 再次运行会使用已关联的 Vercel 项目、已有的 GitHub 密钥、机器人和订阅规则。部署中断后可直接重跑。脚本按生产端点地址识别 webhook，只管理对应条目。
+
+## 编辑通知格式
+
+`formats/` 按 GitHub 事件名存放 YAML。修改 PR 通知编辑 `formats/pull_request.yml`，修改额外订阅事件的通用样式编辑 `formats/default.yml`。每份配置定义标题（`title`）、按顺序排列的正文字段（`fields`）、按钮目标名称（`button`）和链接字段（`link`）。标题栏颜色 `color` 默认是 `default`。
+
+`variants` 下按动作覆盖需要变化的字段，例如 PR 的 `opened` 和 `closed`。同一动作有多种结果时用更具体的键，例如 `closed.merged` 和 `submitted.approved`。每个变体继承所在文件的基础配置。标题中的 `{{prefix}}` 表示操作人与仓库，`{{number}}` 包含编号前缀，缺少编号时自动省略。可用变量由 `src/card-context.js` 定义。
+
+首次运行 `npm ci`，修改 YAML 后运行 `npm test`。安装和测试都会执行 `npm run build:formats`，校验标题变量、颜色、正文字段和默认订阅覆盖情况，并生成供函数直接导入的 JSON。订阅和过滤仍由下方规则控制。
 
 ## 配置订阅
 
@@ -31,7 +39,7 @@ GITHUB_EVENTS=pull_request.opened,release.published npm run deploy
 - `push` 仅转发 `main` 分支的推送，其他分支和标签均跳过。通配订阅 `*` 同样遵循此规则。
 - `workflow_run.completed` 的 CI 失败通知已暂停，已有订阅和通配订阅 `*` 均会跳过此事件。
 - 脚本将 `release.published` 等规则转换为 GitHub 的事件类型，并将完整规则写入 Vercel 供函数过滤动作。
-- 已合并 PR 使用 GitHub 的 `pull_request.closed` 规则，卡片会标为 `merged`。空的规则列表会暂停业务通知。
+- 已合并 PR 使用 GitHub 的 `pull_request.closed` 规则，卡片标题会显示“合并了 PR”。空的规则列表会暂停业务通知。
 
 自动化环境可通过进程环境变量或本机 `.env.local` 提供 `FEISHU_WEBHOOK_URL`、可选的 `FEISHU_SIGNING_SECRET` 和 `GITHUB_EVENTS`。GitHub 密钥由脚本生成，以 Vercel 可读的 Production Config 保存，供下次部署同步。飞书机器人地址和签名密钥以 Secret 保存。
 

@@ -8,6 +8,12 @@
   },
   "scripts": {
     "test": "node --test",
-    "deploy": "node --env-file-if-exists=.env.local scripts/deploy.js"
+    "deploy": "node --env-file-if-exists=.env.local scripts/deploy.js",
+    "prepare": "npm run build:formats",
+    "pretest": "npm run build:formats",
+    "build:formats": "node scripts/build-formats.js"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
   }
 }

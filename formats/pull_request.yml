@@ -1,0 +1,28 @@
+title: "{{prefix}}触发了 PR{{number}} 事件（{{action}}）"
+fields: [[操作人, actor], [标题, subject]]
+button: PR
+link: itemUrl
+variants:
+  opened:
+    title: "{{prefix}}提交了 PR{{number}}"
+    color: wathet
+    fields: [[操作人, actor], [标题, subject], [正文, body]]
+  closed:
+    title: "{{prefix}}关闭了 PR{{number}}"
+  closed.merged:
+    title: "{{prefix}}合并了 PR{{number}}"
+    color: green
+  reopened:
+    title: "{{prefix}}重新打开了 PR{{number}}"
+  ready_for_review:
+    title: "{{prefix}}将 PR{{number}} 标记为可评审"
+    color: wathet
+    fields: [[操作人, actor], [标题, subject], [正文, body]]
+  review_requested:
+    title: "{{prefix}}请求评审 PR{{number}}"
+    color: wathet
+    fields: [[操作人, actor], [标题, subject], [请求评审, reviewer], [正文, body]]
+  edited:
+    title: "{{prefix}}编辑了 PR{{number}}"
+  synchronize:
+    title: "{{prefix}}更新了 PR{{number}}"
