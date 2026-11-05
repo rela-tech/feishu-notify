@@ -1,0 +1,62 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createHmac } from 'node:crypto';
+import endpoint, { handle } from '../api/github.js';
+
+const env = {
+  GITHUB_WEBHOOK_SECRET: 'test-secret',
+  FEISHU_WEBHOOK_URL: 'https://open.feishu.cn/open-apis/bot/v2/hook/test',
+  FEISHU_SIGNING_SECRET: 'bot-secret',
+  GITHUB_EVENTS: 'push, pull_request.opened'
+};
+
+function delivery(event, payload, signedBody) {
+  const body = JSON.stringify(payload, null, 2);
+  const digest = createHmac('sha256', env.GITHUB_WEBHOOK_SECRET).update(signedBody ?? body).digest('hex');
+  return new Request('http://localhost/api/github', {
+    method: 'POST', body,
+    headers: { 'x-github-event': event, 'x-hub-signature-256': 'sha256=' + digest }
+  });
+}
+
+test('订阅的 PR 生成签名卡片，保留中文和详情链接', async () => {
+  const url = 'https://github.com/example/repo/pull/1';
+  let card;
+  const result = await handle(delivery('pull_request', {
+    action: 'opened', repository: { full_name: 'example/repo' },
+    pull_request: { title: '修复登录', html_url: url }
+  }), env, async (target, options) => {
+    assert.equal(target, env.FEISHU_WEBHOOK_URL);
+    card = JSON.parse(options.body);
+    return Response.json({ code: 0 });
+  });
+  assert.equal(result.status, 200);
+  assert.equal(card.msg_type, 'interactive');
+  assert.match(card.card.elements[0].text.content, /修复登录/);
+  assert.equal(card.card.elements[1].actions[0].url, url);
+  assert.equal(card.sign, createHmac('sha256', card.timestamp + '\n' + env.FEISHU_SIGNING_SECRET).digest('base64'));
+});
+
+test('未订阅、ping 和篡改请求均不发送', async () => {
+  const unexpected = () => { throw Error('Unexpected send'); };
+  for (const [req, status, message] of [
+    [delivery('pull_request', { action: 'closed' }), 200, 'ignored'],
+    [delivery('ping', {}), 200, 'pong'],
+    [delivery('push', {}, '{ }'), 401, 'Invalid signature']
+  ]) {
+    const response = await handle(req, env, unexpected);
+    assert.equal(response.status, status);
+    assert.equal((await response.json()).message, message);
+  }
+});
+
+test('通配订阅支持其他事件，机器人业务错误返回 502', async () => {
+  const response = await handle(delivery('fork', {}), { ...env, GITHUB_EVENTS: '*' },
+    async () => Response.json({ code: 19024 }));
+  assert.equal(response.status, 502);
+  assert.match((await response.json()).message, /19024/);
+});
+
+test('Vercel 函数入口只接受 POST', async () => {
+  assert.equal((await endpoint.fetch(new Request('http://localhost/api/github'))).status, 405);
+});
