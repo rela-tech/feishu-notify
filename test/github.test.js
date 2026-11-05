@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
+import { githubCard } from '../src/card.js';
 import endpoint, { handle } from '../api/github.js';
 
 const env = {
@@ -33,6 +34,7 @@ test('订阅的 PR 生成签名卡片，保留中文和详情链接', async () =
   });
   assert.equal(result.status, 200);
   assert.equal(card.msg_type, 'interactive');
+  assert.equal(card.card.header.template, 'wathet');
   assert.equal(card.card.header.title.content, 'repo · 新建 PR #1');
   assert.equal(card.card.elements[0].text.content, '操作人：tester\n标题：修复登录\n正文：验证登录流程。');
   assert.equal(card.card.elements[1].actions[0].url, url);
@@ -104,10 +106,10 @@ test('默认订阅提交评审，根据评审结果生成标题并链接到这�
   const url = 'https://github.com/example/repo/pull/2#pullrequestreview-1';
   const defaults = { ...env };
   delete defaults.GITHUB_EVENTS;
-  for (const [state, label, body] of [
-    ['approved', '批准', null],
-    ['changes_requested', '要求修改', '请补充错误处理'],
-    ['commented', '评论', '这段逻辑清晰']
+  for (const [state, label, body, template] of [
+    ['approved', '批准', null, 'green'],
+    ['changes_requested', '要求修改', '请补充错误处理', 'red'],
+    ['commented', '评论', '这段逻辑清晰', 'default']
   ]) {
     let card;
     const result = await handle(delivery('pull_request_review', {
@@ -118,6 +120,7 @@ test('默认订阅提交评审，根据评审结果生成标题并链接到这�
       return Response.json({ code: 0 });
     });
     assert.equal(result.status, 200);
+    assert.equal(card.header.template, template);
     assert.equal(card.header.title.content, `repo · ${label} PR #2`);
     assert.equal(card.elements[0].text.content, '操作人：tester\n标题：登录' + (body ? '\n评审意见：' + body : ''));
     assert.equal(card.elements[1].actions[0].url, url);
@@ -131,5 +134,23 @@ test('CI 失败通知暂停，已有订阅和通配订阅均跳过', async () =>
     const response = await handle(delivery('workflow_run', payload), { ...env, GITHUB_EVENTS: subscription }, send);
     assert.equal(response.status, 200);
     assert.equal((await response.json()).message, 'ignored');
+  }
+});
+
+test('卡片颜色区分强提醒、成功与普通动态', () => {
+  for (const [event, payload, expected] of [
+    ['push', { ref: 'refs/heads/main' }, 'default'],
+    ['issue_comment', { action: 'created' }, 'default'],
+    ['fork', {}, 'default'],
+    ['issues', { action: 'opened' }, 'wathet'],
+    ['release', { action: 'published' }, 'wathet'],
+    ['pull_request', { action: 'review_requested' }, 'wathet'],
+    ['pull_request', { action: 'ready_for_review' }, 'wathet'],
+    ['pull_request', { action: 'closed', pull_request: { merged: true } }, 'green'],
+    ['pull_request', { action: 'closed', pull_request: { merged: false } }, 'default'],
+    ['issues', { action: 'closed', issue: { state_reason: 'completed' } }, 'green'],
+    ['issues', { action: 'closed', issue: { state_reason: 'not_planned' } }, 'default']
+  ]) {
+    assert.equal(githubCard(event, payload).card.header.template, expected, event);
   }
 });

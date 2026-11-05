@@ -9,6 +9,25 @@ const reviewLabels = new Map([
   ['approved', '批准'], ['changes_requested', '要求修改'], ['commented', '评论']
 ]);
 
+const actionTemplates = new Map([
+  ['pull_request.opened', 'wathet'],
+  ['pull_request.review_requested', 'wathet'],
+  ['pull_request.ready_for_review', 'wathet'],
+  ['issues.opened', 'wathet'],
+  ['release.published', 'wathet']
+]);
+
+function headerTemplate(event, p) {
+  if (event === 'pull_request' && p.action === 'closed' && p.pull_request?.merged) return 'green';
+  if (event === 'issues' && p.action === 'closed' && p.issue?.state_reason === 'completed') return 'green';
+  if (event === 'pull_request_review' && p.action === 'submitted') {
+    const state = p.review?.state?.toLowerCase();
+    if (state === 'approved') return 'green';
+    if (state === 'changes_requested') return 'red';
+  }
+  return actionTemplates.get(`${event}.${p.action}`) ?? 'default';
+}
+
 function describe(event, p) {
   const item = p.pull_request ?? p.issue ?? p.release ?? p.workflow_run ?? p.discussion;
   const url = item?.html_url;
@@ -84,6 +103,6 @@ export function githubCard(event, p) {
   }
   return {
     msg_type: 'interactive',
-    card: { header: { template: 'blue', title: plain([repo, title].filter(Boolean).join(' · ')) }, elements }
+    card: { header: { template: headerTemplate(event, p), title: plain([repo, title].filter(Boolean).join(' · ')) }, elements }
   };
 }
