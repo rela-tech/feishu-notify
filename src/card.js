@@ -5,6 +5,10 @@ const actionLabels = new Map(Object.entries({
   synchronize: '更新', published: '发布', created: '创建', deleted: '删除'
 }));
 
+const reviewLabels = new Map([
+  ['approved', '批准'], ['changes_requested', '要求修改'], ['commented', '评论']
+]);
+
 function describe(event, p) {
   const item = p.pull_request ?? p.issue ?? p.release ?? p.workflow_run ?? p.discussion;
   const url = item?.html_url;
@@ -20,6 +24,14 @@ function describe(event, p) {
       title: [verb, ref].filter(Boolean).join(' '),
       details: [['提交', p.head_commit?.message?.split('\n')[0]]],
       url: p.compare ?? p.head_commit?.url, target: '提交'
+    };
+  }
+  if (event === 'pull_request_review' && p.action === 'submitted') {
+    const verb = reviewLabels.get(p.review?.state?.toLowerCase()) ?? '评审';
+    return {
+      title: `${verb} PR${suffix}`,
+      details: [['标题', subject], ['评审意见', p.review?.body?.trim()]],
+      url: p.review?.html_url ?? url, target: '评审'
     };
   }
   if (event === 'issue_comment' || event === 'pull_request_review_comment') {

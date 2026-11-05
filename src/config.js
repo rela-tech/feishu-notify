@@ -1,4 +1,4 @@
-export const defaultEvents = 'push,pull_request.opened,pull_request.closed,issues.opened,release.published';
+export const defaultEvents = 'push,pull_request.opened,pull_request.closed,issues.opened,release.published,pull_request_review.submitted';
 export const botUrlPattern = /^https:\/\/open\.(?:feishu\.cn|larksuite\.com)\/open-apis\/bot\/v2\/hook\/[\w-]+$/;
 
 export function subscriptionRules(value = defaultEvents) {

@@ -62,3 +62,27 @@ test('通配订阅支持其他事件，机器人业务错误返回 502', async (
 test('Vercel 函数入口只接受 POST', async () => {
   assert.equal((await endpoint.fetch(new Request('http://localhost/api/github'))).status, 405);
 });
+
+test('默认订阅提交评审，根据评审结果生成标题并链接到这次评审', async () => {
+  const url = 'https://github.com/example/repo/pull/2#pullrequestreview-1';
+  const defaults = { ...env };
+  delete defaults.GITHUB_EVENTS;
+  for (const [state, label, body] of [
+    ['approved', '批准', null],
+    ['changes_requested', '要求修改', '请补充错误处理'],
+    ['commented', '评论', '这段逻辑清晰']
+  ]) {
+    let card;
+    const result = await handle(delivery('pull_request_review', {
+      action: 'submitted', repository: { name: 'repo' }, sender: { login: 'tester' },
+      pull_request: { number: 2, title: '登录' }, review: { state, body, html_url: url }
+    }), defaults, async (_, options) => {
+      card = JSON.parse(options.body).card;
+      return Response.json({ code: 0 });
+    });
+    assert.equal(result.status, 200);
+    assert.equal(card.header.title.content, `repo · ${label} PR #2`);
+    assert.equal(card.elements[0].text.content, '操作人：tester\n标题：登录' + (body ? '\n评审意见：' + body : ''));
+    assert.equal(card.elements[1].actions[0].url, url);
+  }
+});
