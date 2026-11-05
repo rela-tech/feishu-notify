@@ -35,6 +35,10 @@ export async function handle(request, env = process.env, send = fetch) {
     return reply(200, 'ignored');
   }
 
+  if (event === 'push' && payload.ref !== 'refs/heads/main') {
+    return reply(200, 'ignored');
+  }
+
   if (event === 'workflow_run' && (payload.action !== 'completed' || payload.workflow_run?.conclusion !== 'failure')) {
     return reply(200, 'ignored');
   }

@@ -52,6 +52,26 @@ test('未订阅、ping 和篡改请求均不发送', async () => {
   }
 });
 
+test('push 和通配订阅仅转发 main 分支的推送', async () => {
+  for (const subscription of ['push', '*']) {
+    for (const [ref, expected] of [
+      ['refs/heads/main', 'sent'],
+      ['refs/heads/feature/main', 'ignored'],
+      ['refs/tags/main', 'ignored'],
+      [undefined, 'ignored']
+    ]) {
+      let sends = 0;
+      const response = await handle(delivery('push', { ref }), { ...env, GITHUB_EVENTS: subscription }, async () => {
+        sends++;
+        return Response.json({ code: 0 });
+      });
+      assert.equal(response.status, 200);
+      assert.equal((await response.json()).message, expected);
+      assert.equal(sends, expected === 'sent' ? 1 : 0);
+    }
+  }
+});
+
 test('通配订阅支持其他事件，机器人业务错误返回 502', async () => {
   const response = await handle(delivery('fork', {}), { ...env, GITHUB_EVENTS: '*' },
     async () => Response.json({ code: 19024 }));
